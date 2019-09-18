@@ -55,16 +55,17 @@ def remove_clause(total_input, list_true):
         if clause == true_literal:
           print("clause_list=%s, true_literal=%i" % (clause_list, true_literal))
           del clause_list[:]
-          total_input = [x for x in total_input if x]
+          total_input = [x for x in total_input if x]        
+          for sublist in total_input:
+            for index, item in enumerate(sublist):
+              if item == true_literal * -1:
+                sublist.pop(index)
   return total_input
 
 if __name__ == "__main__":
     main()
 
-
-
 #print(list_true)
-
 
 #### DAVIS PUTNAM ####
 #### SAT ####
