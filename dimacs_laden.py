@@ -30,8 +30,8 @@ def main():
   list_true = [] # hierin opslaan welke literals allemaal true zijn
 
   # call unit_clause rule
-  total_input, dicts, list_true = unit_clause(total_input, dicts, list_true)
-  print(list_true)
+  total_input = unit_clause(total_input, dicts, list_true)
+  print(total_input)
 
 #### SIMPLIFICATION RULES ####
 # unit clause rule
@@ -44,18 +44,19 @@ def unit_clause(total_input, dicts, list_true):
       # set on true in dict + add to list_true 
       dicts[tmp] = True
       list_true.append(tmp)
-  remove_clause(total_input, list_true)
-  return total_input, dicts, list_true
+      total_input = remove_clause(total_input, list_true)
+  return total_input
 
 # remove clauses that are in list_true
 def remove_clause(total_input, list_true):
-  list_empty = []
   for true_literal in list_true:
     for clause_list in total_input:
-      for index, clause in enumerate(clause_list):
-        if abs(clause) == true_literal or clause == true_literal:
-          clause_list.remove(clause)
-  return (total_input, list_true)
+      for clause in clause_list:
+        if clause == true_literal:
+          print("clause_list=%s, true_literal=%i" % (clause_list, true_literal))
+          del clause_list[:]
+          total_input = [x for x in total_input if x]
+  return total_input
 
 if __name__ == "__main__":
     main()
