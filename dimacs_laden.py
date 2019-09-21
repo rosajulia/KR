@@ -28,43 +28,78 @@ def main():
   literals = list(chain((*total_input))) # alle literals
   dicts = {i:-1 for i in literals} # -1 betekent unassigned. 1 = true. 0 = false, hierin alle literals opslaan + bool
   list_true = [] # hierin opslaan welke literals allemaal true zijn
+  list_length = [0] # hierin de lengte van list_true bijhouden voor while loop, kan niet leeg zijn door index error
 
-  # call unit_clause rule
-  total_input = unit_clause(total_input, dicts, list_true)
-  print(total_input)
+  # een keer runnen, voor index error
+  total_input, list_true = unit_clause(total_input, dicts, list_true)
+  remove_clause(total_input, list_true)
+  print(len(set(list_true)))
+  list_length.append(len(set(list_true)))
+
+  # while there are unit clauses, do unit clause simplification function
+  while list_length[-1] != list_length[-2]:
+    total_input, list_true = unit_clause(total_input, dicts, list_true)
+    remove_clause(total_input, list_true)
+    print(len(set(list_true)))
+    list_length.append(len(set(list_true)))
 
 #### SIMPLIFICATION RULES ####
 # unit clause rule
 def unit_clause(total_input, dicts, list_true):
   for i in total_input:
-    # unit clause: set key in dict op True
     if len(i) == 1:
-      # create integer from list
       tmp = i[0]
-      # set on true in dict + add to list_true 
       dicts[tmp] = True
       list_true.append(tmp)
-      total_input = remove_clause(total_input, list_true)
-  return total_input
+      del i[:] # remove all clauses containing true literal
+      total_input = [x for x in total_input if x] 
+  return total_input, list_true
 
-# remove clauses that are in list_true
 def remove_clause(total_input, list_true):
   for true_literal in list_true:
     for clause_list in total_input:
-      for clause in clause_list:
-        if clause == true_literal:
-          print("clause_list=%s, true_literal=%i" % (clause_list, true_literal))
-          del clause_list[:]
-          total_input = [x for x in total_input if x]        
-          for sublist in total_input:
-            for index, item in enumerate(sublist):
-              if item == true_literal * -1:
-                sublist.pop(index)
-  return total_input
+      for index, clause in enumerate(clause_list):
+        if clause == true_literal * -1: # remove all opposite forms of the true literal from clauses
+          clause_list.pop(index)
 
 if __name__ == "__main__":
     main()
 
+
+# remove clauses that are in list_true
+#def remove_clause(total_input, list_true):
+  #for true_literal in list_true:
+    #print(list(true_literal))
+    #if list(true_literal) in total_input:
+      #print('yes')
+    # for clause_list in total_input:
+    #   for index, clause in enumerate(clause_list):
+    #     if clause == true_literal:
+    #       print("clause_list=%s, true_literal=%i" % (clause_list, true_literal))
+    #       del clause_list[:]
+    #       total_input = [x for x in total_input if x]
+    #     elif clause == true_literal * -1:
+    #       clause_list.pop(index)
+
+
+#   for i, sub_list in enumerate(total_input):
+#     print(i)
+#     if list_true[0] in sub_list:
+#       del total_input[i]
+#       break
+
+  # for true_literal in list_true:
+  #   for clause_list in total_input:
+  #     for clause in clause_list:
+  #       if clause == true_literal:
+  #         print("clause_list=%s, true_literal=%i" % (clause_list, true_literal))
+  #         del clause_list[:]
+  #         total_input = [x for x in total_input if x]        
+  #         for sublist in total_input:
+  #           for index, item in enumerate(sublist):
+  #             if item == true_literal * -1:
+  #               sublist.pop(index)
+ # return total_input
 #print(list_true)
 
 #### DAVIS PUTNAM ####
