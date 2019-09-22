@@ -1,6 +1,7 @@
 import sys
 import mxklabs.dimacs  
 import argparse
+import random
 from itertools import chain
 
 def main():
@@ -42,6 +43,11 @@ def main():
     remove_clause(total_input, list_true)
     print(len(set(list_true)))
     list_length.append(len(set(list_true)))
+  print(dicts)
+
+  # pick random literal from dicts from literals which are still undetermined
+  rand_var = pick_var_random(dicts)
+  print(rand_var)
 
 #### SIMPLIFICATION RULES ####
 # unit clause rule
@@ -61,6 +67,11 @@ def remove_clause(total_input, list_true):
       for index, clause in enumerate(clause_list):
         if clause == true_literal * -1: # remove all opposite forms of the true literal from clauses
           clause_list.pop(index)
+
+def pick_var_random(dicts):
+  x = [literal for literal, value in dicts.items() if value == -1] # get list of undetermined literals
+  rand_var = random.choice(x)
+  return rand_var
 
 if __name__ == "__main__":
     main()
