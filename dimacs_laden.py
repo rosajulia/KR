@@ -29,25 +29,52 @@ def main():
   literals = list(chain((*total_input))) # alle literals
   dicts = {i:-1 for i in literals} # -1 betekent unassigned. 1 = true. 0 = false, hierin alle literals opslaan + bool
   list_true = [] # hierin opslaan welke literals allemaal true zijn
-  list_length = [0] # hierin de lengte van list_true bijhouden voor while loop, kan niet leeg zijn door index error
 
-  # een keer runnen, voor index error
-  total_input, list_true = unit_clause(total_input, dicts, list_true)
-  remove_clause(total_input, list_true)
-  print(len(set(list_true)))
-  list_length.append(len(set(list_true)))
+  print("FIRST DPLL")
+  print("-------------")
+  total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
+  print("SECOND DPLL")
+  print("-------------")
+  total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
+  print("THIRD DPLL")
+  print("-------------")
+  total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
+  print("FOURTH DPLL")
+  print("-------------")
+  total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
+  print("FIFTH DPLL")
+  print("-------------")
+  total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
 
-  # while there are unit clauses, do unit clause simplification function
-  while list_length[-1] != list_length[-2]:
+
+def DPLL(total_input, dicts, list_true):
+  # check for satisfiability
+  print("SAT check")
+  if len(total_input) == 0:
+    print("sat")
+    return total_input, dicts, list_true
+  elif [] in total_input:
+    print("unsat")
+    return total_input, dicts, list_true
+  
+  # simplify
+  print("SIMPLIFY")
+  total_input, list_true, dicts = simplify(total_input, list_true, dicts)
+
+  # randomize
+  print("RANDOMIZE")
+  dicts, total_input = pick_var_random(dicts, total_input)
+
+  return total_input, dicts, list_true
+
+
+def simplify(total_input, list_true, dicts):
+  # while there are unit clauses, do unit clause simplification function  
+  while len(min(total_input, key = len)) == 1:
     total_input, list_true = unit_clause(total_input, dicts, list_true)
-    remove_clause(total_input, list_true)
+    total_input, list_true = remove_clause(total_input, list_true)
     print(len(set(list_true)))
-    list_length.append(len(set(list_true)))
-  print(dicts)
-
-  # pick random literal from dicts from literals which are still undetermined
-  rand_var = pick_var_random(dicts)
-  print(rand_var)
+  return total_input, list_true, dicts
 
 #### SIMPLIFICATION RULES ####
 # unit clause rule
@@ -58,7 +85,8 @@ def unit_clause(total_input, dicts, list_true):
       dicts[tmp] = True
       list_true.append(tmp)
       del i[:] # remove all clauses containing true literal
-      total_input = [x for x in total_input if x] 
+      total_input = [x for x in total_input if x != []]
+      #total_input = [x for x in total_input if x] 
   return total_input, list_true
 
 def remove_clause(total_input, list_true):
@@ -67,11 +95,13 @@ def remove_clause(total_input, list_true):
       for index, clause in enumerate(clause_list):
         if clause == true_literal * -1: # remove all opposite forms of the true literal from clauses
           clause_list.pop(index)
+  return total_input, list_true
 
-def pick_var_random(dicts):
+def pick_var_random(dicts, total_input):
   x = [literal for literal, value in dicts.items() if value == -1] # get list of undetermined literals
   rand_var = random.choice(x)
-  return rand_var
+  total_input.append([rand_var])
+  return dicts, total_input
 
 if __name__ == "__main__":
     main()
