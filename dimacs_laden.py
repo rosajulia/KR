@@ -3,6 +3,7 @@ import mxklabs.dimacs
 import argparse
 import random
 from itertools import chain
+from copy import copy, deepcopy
 
 def main():
   # inladen dicams
@@ -30,203 +31,154 @@ def main():
   dicts = {i:-1 for i in literals} # -1 betekent unassigned. 1 = true. 0 = false, hierin alle literals opslaan + bool
   list_true = [] # hierin opslaan welke literals allemaal true zijn
 
-  # DPLL aanroepen net zo lang tot sat of unsat --> NOG GEEN BACKTRACKING HIERIN
-  while len(total_input) != 0 or [] not in total_input:
-    print("DPLL")
-    total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
+  # DPLL aanroepen
+  solve(total_input, dicts, list_true)
+  print(len(set(list_true)))
+  print(set(list_true))
 
-    print("SAT check")
-    if len(total_input) == 0:
-      print("sat")
-      return total_input, dicts, list_true
-    elif [] in total_input:
-      print("unsat")
-      return total_input, dicts, list_true
+def solve(total_input, dicts, list_true):
+  print("SIMPLIFY \n------------")
+  for clause in total_input:
+    if len(clause) == 1:
+      lit = clause[0]
+      dicts[lit] = True
+      list_true.append(lit)
+      total_input = rem_unit_clause(total_input, lit)
+      print(len(set(list_true)))
 
+  print("SAT CHECK \n------------")
+  if len(total_input) == 0:
+    print("sat")
+    return True
 
-def DPLL(total_input, dicts, list_true):
-  # simplify
-  print("SIMPLIFY")
-  total_input, list_true, dicts = simplify(total_input, list_true, dicts)
-
-  # randomize
-  print("RANDOMIZE")
-  dicts, total_input = pick_var_random(dicts, total_input)
-
-  return total_input, dicts, list_true
-
-
-def simplify(total_input, list_true, dicts):
-  # while there are unit clauses, do unit clause simplification function  
-  while len(min(total_input, key = len)) == 1:
-    total_input, list_true = unit_clause(total_input, dicts, list_true)
-    total_input, list_true = remove_clause(total_input, list_true)
-    print(len(set(list_true)))
-  return total_input, list_true, dicts
+  # SAT check
+  print("UNSAT CHECK \n------------")
+  if [] in total_input:
+    print("unsat")
+    return False
+    #return total_input
+  
+  # Split on an arbitrarily decided literal
+  dicts, rand_lit = pick_var_random(dicts)
+  return (solve(rem_unit_clause(total_input, rand_lit), dicts, list_true) or
+  solve(rem_unit_clause(total_input, -rand_lit), dicts, list_true))
 
 #### SIMPLIFICATION RULES ####
 # unit clause rule
-def unit_clause(total_input, dicts, list_true):
-  for i in total_input:
-    if len(i) == 1:
-      tmp = i[0]
-      dicts[tmp] = True
-      list_true.append(tmp)
-      del i[:] # remove all clauses containing true literal
-      total_input = [x for x in total_input if x != []]
-      #total_input = [x for x in total_input if x] 
-  return total_input, list_true
+def rem_unit_clause(total_input, lit):
+  total_input = deepcopy(total_input)
+  for clause in copy(total_input):
+    if lit in clause: total_input.remove(clause)
+    if -lit in clause: clause.remove(-lit)
+  return total_input
 
-def remove_clause(total_input, list_true):
-  for true_literal in list_true:
-    for clause_list in total_input:
-      for index, clause in enumerate(clause_list):
-        if clause == true_literal * -1: # remove all opposite forms of the true literal from clauses
-          clause_list.pop(index)
-  return total_input, list_true
-
-def pick_var_random(dicts, total_input):
+#### BRANCHING ####
+# randomize function
+def pick_var_random(dicts):
   x = [literal for literal, value in dicts.items() if value == -1] # get list of undetermined literals
   rand_var = random.choice(x)
-  total_input.append([rand_var])
-  return dicts, total_input
+  return dicts, rand_var
+
+
+
+
+
+  # DPLL aanroepen net zo lang tot sat of unsat --> NOG GEEN BACKTRACKING HIERIN
+  # while len(total_input) != 0 or [] not in total_input:
+  #   print("DPLL")
+  #   total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
+
+  #   print("SAT check")
+  #   if len(total_input) == 0:
+  #     print("sat")
+  #     return total_input, dicts, list_true
+  #   elif [] in total_input:
+  #     print("unsat")
+  #     return total_input, dicts, list_true
+
+  # total_input, list_true, dicts = simplify(total_input, list_true, dicts)
+
+  # print("BRANCHING \n------------")
+  # dicts, rand_var = pick_var_random(dicts)
+
+  # if solve(total_input_orig, total_input + [[rand_var]], dicts, list_true) is len(total_input) == 0:
+  #   return "satisfiable"
+  # else:
+  #   return (solve(total_input_orig, total_input + [[-rand_var]], dicts, list_true))
+
+
+
+  # # simplify
+  # print("SIMPLIFY")
+  # total_input, list_true, dicts = simplify(total_input, list_true, dicts)
+
+  # # Randomize
+  # print("RANDOMIZE")
+  # dicts, rand_var = pick_var_random(dicts)
+  # #total_input.append([rand_var])
+
+  # # Backtracking
+  # print("BACKTRACKING")
+  # if solve(total_input_orig, total_input + [[rand_var]], dicts, list_true) is len(total_input) == 0:
+  #   return solve(total_input_orig, total_input + [[rand_var]], dicts, list_true)
+  # else:
+  #   print('not true')
+  #   print(total_input_orig)
+  #   return solve(total_input_orig, total_input + [[rand_var * -1]], dicts, list_true)
+    # rand_var = rand_var * -1
+    # print(rand_var)
+    # print(total_input_orig)
+    # total_input = total_input_orig
+    # total_input.append([rand_var])
+    # #total_input = total_input_orig.append([rand_var])
+    # return solve(total_input_orig, total_input, dicts, list_true)
+    
+  # if len(total_input) == 0:
+  #   print("sat")
+  #   return total_input, dicts, list_true
+  # elif [] in total_input:
+  #   print(total_input)
+  #   print("unsat")
+  #   return total_input, dicts, list_true
+
+
+
+# combine simplify function + randomize function
+# def DPLL(total_input, dicts, list_true):
+#   # simplify
+#   print("SIMPLIFY")
+#   total_input, list_true, dicts = simplify(total_input, list_true, dicts)
+
+#   # randomize
+#   print("RANDOMIZE")
+#   dicts, total_input = pick_var_random(dicts, total_input)
+
+#   return total_input, dicts, list_true
+
+
+
+
 
 if __name__ == "__main__":
     main()
 
 
-# remove clauses that are in list_true
-#def remove_clause(total_input, list_true):
-  #for true_literal in list_true:
-    #print(list(true_literal))
-    #if list(true_literal) in total_input:
-      #print('yes')
-    # for clause_list in total_input:
-    #   for index, clause in enumerate(clause_list):
-    #     if clause == true_literal:
-    #       print("clause_list=%s, true_literal=%i" % (clause_list, true_literal))
-    #       del clause_list[:]
-    #       total_input = [x for x in total_input if x]
-    #     elif clause == true_literal * -1:
-    #       clause_list.pop(index)
 
 
-#   for i, sub_list in enumerate(total_input):
-#     print(i)
-#     if list_true[0] in sub_list:
-#       del total_input[i]
-#       break
-
-  # for true_literal in list_true:
-  #   for clause_list in total_input:
-  #     for clause in clause_list:
-  #       if clause == true_literal:
-  #         print("clause_list=%s, true_literal=%i" % (clause_list, true_literal))
-  #         del clause_list[:]
-  #         total_input = [x for x in total_input if x]        
-  #         for sublist in total_input:
-  #           for index, item in enumerate(sublist):
-  #             if item == true_literal * -1:
-  #               sublist.pop(index)
- # return total_input
-#print(list_true)
-
-#### DAVIS PUTNAM ####
-#### SAT ####
-#if len(total_input) == 0:
-#  print("Sat")
-
-#     # remove from total_input and delete empty set 
-#     i.remove(abs(tmp))
-#     total_input=[e for e in total_input if e]
-#     for i in list_true:
-#       for j in total_input:
-#         for k in j:
-#           if abs(k) == i:
-#             j.remove(k)
-# print(list_true)
-
-# unit clause rule
-#for i in total_input:
-  # unit clause: set key in dict op True
- # if len(i) == 1:
-    # create integer from list
-  #  tmp = i[0]
-    # set on true in dict + add to list_true 
-   # dicts[tmp] = True
-    #list_true.append(tmp)
-    # remove from total_input and delete empty set (ONLY WITH UNIT CLAUSE)
-    #i.remove(abs(tmp))
-    #total_input=[e for e in total_input if e]
-    #for i in list_true:
-    #  for j in total_input:
-    #    for k in j:
-    #      if abs(k) == i:
-    #        j.remove(k)
-#print(list_true)
+# remove clauses
+# def remove_clause(total_input, list_true):
+#   for true_literal in list_true:
+#     for clause_list in total_input:
+#       for index, clause in enumerate(clause_list):
+#         if clause == true_literal * -1: # remove all opposite forms of the true literal from clauses
+#           clause_list.pop(index)
+#   return total_input, list_true
 
 
 
-#haal true clauses uit total_input
-
-
-#print(total_input)
-
-# # tautology rule 
-# for i in total_input:
-#   if len(i) >= 2:
-#     tmp = [abs(j) for j in i]
-#     # tautology: set key in dict op True
-#     if (len(set(tmp)) != len(i)):
-#       tmp  = list(set([x for x in tmp if tmp.count(x) > 1]))[0]
-#       dicts[tmp] = True
-#       list_true.append(tmp)
-
-
-
-# print(total_input)  
-  
-  #for index, value in enumerate(total_input):
-  #  for i in value:
-  #    if abs(i) == key:
-  #      total_input.pop(index)
-
-
-
-
-
-
-
-# # set other literals with same row and column on False --> sudoku specifiek?
-# for j in [x for x in range(1, 10) if x != abs(i[0]) % 10]:
-# #   tmp = int((str(i[0])[:2]) + str(j))
-#   dicts[tmp] = False
-
-#for i in total_input:
-#  if len(i) >= 2:
-#    tmp = [abs(j) for j in i]
-#    if (len(set(tmp)) != len(i)):
-          
-
-######## SIMPLIFY ##########
-#### Unit clause rule
-# def simplify(): 
-#   for i in total_input:
-#       if len(i) == 1:
-#           list_true.append(i)
-
-# #### Tautology rule
-#   for i in total_input:
-#     if len(i) >= 2:
-#       tmp = [abs(j) for j in i]
-#       if (len(set(tmp)) != len(i)):
-#         list_true.append(list(set([x for x in tmp if tmp.count(x) > 1])))
-#   print(list_true)
-
-######## SPLIT ########
-
-
-#keys = range(111,dimacs1.num_vars+1) # --> het is natuurlijk niet altijd 111, misschien zoeken naar laagste waarde in clauses?
-#for i in keys:
-#  dicts[i] = "tbd" # --> misschien niet van te voren een dict aanmaken, maar tzt literals in dict stoppen
-
+# combine unit_clause + remove_clause function
+# def simplify(total_input, lit):
+#   # while there are unit clauses, do unit clause simplification function  
+#   while len(min(total_input, key = len)) == 1:
+#     total_input = rem_unit_clause(total_input, lit)
+#   return total_input 
