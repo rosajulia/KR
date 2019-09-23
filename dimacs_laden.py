@@ -30,33 +30,21 @@ def main():
   dicts = {i:-1 for i in literals} # -1 betekent unassigned. 1 = true. 0 = false, hierin alle literals opslaan + bool
   list_true = [] # hierin opslaan welke literals allemaal true zijn
 
-  print("FIRST DPLL")
-  print("-------------")
-  total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
-  print("SECOND DPLL")
-  print("-------------")
-  total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
-  print("THIRD DPLL")
-  print("-------------")
-  total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
-  print("FOURTH DPLL")
-  print("-------------")
-  total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
-  print("FIFTH DPLL")
-  print("-------------")
-  total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
+  # DPLL aanroepen net zo lang tot sat of unsat --> NOG GEEN BACKTRACKING HIERIN
+  while len(total_input) != 0 or [] not in total_input:
+    print("DPLL")
+    total_input, dicts, list_true = DPLL(total_input, dicts, list_true)
+
+    print("SAT check")
+    if len(total_input) == 0:
+      print("sat")
+      return total_input, dicts, list_true
+    elif [] in total_input:
+      print("unsat")
+      return total_input, dicts, list_true
 
 
 def DPLL(total_input, dicts, list_true):
-  # check for satisfiability
-  print("SAT check")
-  if len(total_input) == 0:
-    print("sat")
-    return total_input, dicts, list_true
-  elif [] in total_input:
-    print("unsat")
-    return total_input, dicts, list_true
-  
   # simplify
   print("SIMPLIFY")
   total_input, list_true, dicts = simplify(total_input, list_true, dicts)
