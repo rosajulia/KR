@@ -28,59 +28,74 @@ def main():
   #### DEFINE LIST OF CLAUSES #####
   total_input = dimacs1.clauses + dimacs2.clauses
   literals = list(chain((*total_input))) # alle literals
-  dicts = {i:-1 for i in literals} # -1 betekent unassigned. 1 = true. 0 = false, hierin alle literals opslaan + bool
+  #dicts = {i:-1 for i in literals} # -1 betekent unassigned. 1 = true. 0 = false, hierin alle literals opslaan + bool
   list_true = [] # hierin opslaan welke literals allemaal true zijn
 
   # DPLL aanroepen
-  value, total_input, list_true, dicts = solve(total_input, dicts, list_true)
+  value, total_input, list_true = solve(total_input, list_true)
   print(len(set(list_true)))
   print(set(list_true))
   print(total_input)
-  print(dicts)
-  #solve(total_input, dicts, list_true)
 
-def solve(total_input, dicts, list_true):
-  print("SIMPLIFY \n------------")
-  for clause in total_input:
-    if len(clause) == 1:
-      lit = clause[0]
-      dicts[lit] = True
-      dicts[-lit] = False
-      list_true.append(lit)
-      total_input = rem_unit_clause(total_input, lit)
-      print(len(set(list_true)))
-
+def solve(total_input, list_true):
   print("SAT CHECK \n------------")
   if len(total_input) == 0:
     print("sat")
-    return True, total_input, list_true, dicts
+    return True, total_input, list_true
 
-  # SAT check
   print("UNSAT CHECK \n------------")
   if [] in total_input:
     print("unsat")
     return False
+
+  print("SIMPLIFY \n------------")
+  #list_true = deepcopy(list_true)
+
+  while len(min(total_input, key = len, default =[])) == 1:
+    for clause in total_input:
+      if len(clause) == 1:
+        lit = clause[0]
+        total_input, list_true = rem_unit_clause(total_input, lit, list_true)
+        print(len(set(list_true)))
   
+  print("SAT CHECK \n------------")
+  if len(total_input) == 0:
+    print("sat")
+    return True, total_input, list_true
+
+  print("UNSAT CHECK \n------------")
+  if [] in total_input:
+    print("unsat")
+    return False
+
   # Split on an arbitrarily decided literal
-  dicts, rand_lit = pick_var_random(dicts)
-  return (solve(rem_unit_clause(total_input, rand_lit), dicts, list_true) or
-  solve(rem_unit_clause(total_input, -rand_lit), dicts, list_true))
+  print("SPLITTING \n--------------")
+  rand_lit = pick_var_random(total_input)
+  print("BACKTRACKING \n------------")
+
+  return (solve(rem_unit_clause(total_input, rand_lit, list_true), list_true) or
+  solve(rem_unit_clause(total_input, -rand_lit, list_true), list_true))
 
 #### SIMPLIFICATION RULES ####
 # unit clause rule
-def rem_unit_clause(total_input, lit):
+def rem_unit_clause(total_input, lit, list_true):
   total_input = deepcopy(total_input)
+  list_true = deepcopy(list_true)
   for clause in copy(total_input):
-    if lit in clause: total_input.remove(clause)
-    if -lit in clause: clause.remove(-lit)
-  return total_input
+    if lit in clause: 
+      total_input.remove(clause)
+      list_true.append(lit)
+    if -lit in clause: 
+      clause.remove(-lit)
+  return total_input, list_true
 
 #### BRANCHING ####
 # randomize function
-def pick_var_random(dicts):
-  x = [literal for literal, value in dicts.items() if value == -1] # get list of undetermined literals
-  rand_var = random.choice(x)
-  return dicts, rand_var
+def pick_var_random(total_input):
+  #x = [literal for literal, value in dicts.items() if value == -1] # get list of undetermined literals
+  x = random.choice(total_input)
+  rand_var = random.choice(list(x))
+  return rand_var
 
 
 
