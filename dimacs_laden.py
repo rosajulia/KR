@@ -32,9 +32,12 @@ def main():
   list_true = [] # hierin opslaan welke literals allemaal true zijn
 
   # DPLL aanroepen
-  solve(total_input, dicts, list_true)
+  value, total_input, list_true, dicts = solve(total_input, dicts, list_true)
   print(len(set(list_true)))
   print(set(list_true))
+  print(total_input)
+  print(dicts)
+  #solve(total_input, dicts, list_true)
 
 def solve(total_input, dicts, list_true):
   print("SIMPLIFY \n------------")
@@ -42,6 +45,7 @@ def solve(total_input, dicts, list_true):
     if len(clause) == 1:
       lit = clause[0]
       dicts[lit] = True
+      dicts[-lit] = False
       list_true.append(lit)
       total_input = rem_unit_clause(total_input, lit)
       print(len(set(list_true)))
@@ -49,14 +53,13 @@ def solve(total_input, dicts, list_true):
   print("SAT CHECK \n------------")
   if len(total_input) == 0:
     print("sat")
-    return True
+    return True, total_input, list_true, dicts
 
   # SAT check
   print("UNSAT CHECK \n------------")
   if [] in total_input:
     print("unsat")
     return False
-    #return total_input
   
   # Split on an arbitrarily decided literal
   dicts, rand_lit = pick_var_random(dicts)
