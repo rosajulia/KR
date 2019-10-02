@@ -31,12 +31,10 @@ def main():
   list_true = [] # hierin opslaan welke literals allemaal true zijn
 
   # DPLL aanroepen
-  value, list_true = solve(total_input, list_true)
-  with open("output_sudoku.txt", "w") as output:
-    output.write(str(list_true))
+  solve(total_input, list_true)
 
-  print(len(set(list_true)))
-  print(set(list_true))
+  # print(len(set(list_true)))
+  # print(set(list_true))
 
 def solve(total_input, list_true):
   print("SIMPLIFY \n------------")
@@ -44,13 +42,15 @@ def solve(total_input, list_true):
     for clause in total_input:
       if len(clause) == 1:
         lit = clause[0]
-        total_input = rem_unit_clause(total_input, lit)
-        list_true = update_list(lit, list_true)
+        newTotalInput = rem_unit_clause(total_input, lit)
+        newListTrue = update_list(lit, list_true)
         print(len(set(list_true)))
   
   print("SAT CHECK \n------------")
   if len(total_input) == 0:
-    return "SAT", list_true
+    with open("output_sudoku.txt", "w") as output:
+      output.write(str(set(list_true)))
+    return "SAT"
 
   print("UNSAT CHECK \n------------")
   if [] in total_input:
@@ -75,9 +75,9 @@ def solve(total_input, list_true):
     if solve(rem_unit_clause(newTotalInput, -rand_lit), update_list(-rand_lit, newListTrue)) == "UNSAT":
       return "UNSAT"
     else:
-      return "SAT", newListTrue
+      return "SAT"
   else:
-    return "SAT", newListTrue  
+    return "SAT"  
 
 #### SIMPLIFICATION RULES ####
 # unit clause rule
