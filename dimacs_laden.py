@@ -31,7 +31,7 @@ def main():
   list_true = [] # hierin opslaan welke literals allemaal true zijn
 
   # DPLL aanroepen
-  value, total_input, list_true = solve(total_input, list_true)
+  value, list_true, list_true = solve(total_input, list_true)
   with open("output_sudoku.txt", "w") as output:
     output.write(str(list_true))
 
@@ -39,16 +39,6 @@ def main():
   print(set(list_true))
 
 def solve(total_input, list_true):
-  print("SAT CHECK \n------------")
-  if len(total_input) == 0:
-    print("sat")
-    return True, total_input, list_true
-
-  print("UNSAT CHECK \n------------")
-  if [] in total_input:
-    print("unsat")
-    return False
-
   print("SIMPLIFY \n------------")
   while len(min(total_input, key = len, default =[])) == 1:
     for clause in total_input:
@@ -57,39 +47,51 @@ def solve(total_input, list_true):
         total_input = rem_unit_clause(total_input, lit)
         list_true = update_list(lit, list_true)
         print(len(set(list_true)))
-  
+        print(set(list_true))
+
+  # copy list_true and total_input
+  newTotalInput = deepcopy(total_input)
+  newListTrue = copy(list_true)
+
   print("SAT CHECK \n------------")
-  if len(total_input) == 0:
-    print("sat")
-    return True, total_input, list_true
+  if len(newTotalInput) == 0:
+    #print("sat")
+    #return True, total_input, list_true
+    return "SAT", newTotalInput, newListTrue
 
   print("UNSAT CHECK \n------------")
-  if [] in total_input:
-    print("unsat")
-    return False
-
+  if [] in newTotalInput:
+    #print("unsat")
+    return "UNSAT"
+  
   # Split on an arbitrarily decided literal
   print("SPLITTING \n--------------")
-  rand_lit = pick_var_random(total_input)
+  rand_lit = pick_var_random(newTotalInput)
   print("BACKTRACKING \n------------")
 
-  # positive literal
-  return (solve(rem_unit_clause(total_input, rand_lit), update_list(rand_lit, list_true)) or
-            solve(rem_unit_clause(total_input, rand_lit), update_list(rand_lit, list_true)))
+  rem_unit_clause(newTotalInput, rand_lit)
+  update_list(rand_lit, newListTrue)
+
+  # recursively call solve
+  if solve(newTotalInput, newListTrue) == "UNSAT":
+    newTotalInput = deepcopy(total_input)
+    newListTrue = copy(list_true)
+    if solve(rem_unit_clause(newTotalInput, -rand_lit), update_list(-rand_lit, newListTrue)) == "UNSAT":
+      return "UNSAT"
+    else:
+      return "SAT", newTotalInput, newListTrue
+  else:
+    return "SAT", newTotalInput, newListTrue  
 
 #### SIMPLIFICATION RULES ####
 # unit clause rule
 def rem_unit_clause(total_input, lit):
-  total_input = deepcopy(total_input)
   for clause in copy(total_input):
-    if lit in clause: 
-      total_input.remove(clause)
-    if -lit in clause: 
-      clause.remove(-lit)
+    if lit in clause: total_input.remove(clause)
+    if -lit in clause: clause.remove(-lit)
   return total_input
 
 def update_list(lit, list_true):
-  list_true = deepcopy(list_true)
   list_true.append(lit)
   return (list_true)
 
