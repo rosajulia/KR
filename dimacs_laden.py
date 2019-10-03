@@ -6,6 +6,12 @@ import pickle
 from itertools import chain
 from copy import copy, deepcopy
 
+global splits
+splits = []
+
+global simplification
+simplification = []
+
 def main():
   # inladen dicams
   ARGV_LEN = len(sys.argv)
@@ -31,13 +37,17 @@ def main():
   list_true = [] # hierin opslaan welke literals allemaal true zijn
 
   # DPLL aanroepen
-  solve(total_input, list_true)
+  DPLL(total_input, list_true)
+  print(len(splits))
+  print(len(simplification))
 
-  # print(len(set(list_true)))
-  # print(set(list_true))
+def DPLL (total_input, list_true):
+  tautology(total_input)
+  solve(total_input, list_true)
 
 def solve(total_input, list_true):
   print("SIMPLIFY \n------------")
+  simplification.append(1)
   while len(min(total_input, key = len, default =[])) == 1:
     for clause in total_input:
       if len(clause) == 1:
@@ -62,7 +72,10 @@ def solve(total_input, list_true):
 
   # Split on an arbitrarily decided literal
   print("SPLITTING \n--------------")
-  rand_lit = pick_var_random(newTotalInput)
+  #rand_lit = pick_var_random(newTotalInput)
+  #rand_lit = JW_OS(newTotalInput)
+  rand_lit = JW_TS(newTotalInput)
+  splits.append(rand_lit)
   print("BACKTRACKING \n------------")
 
   rem_unit_clause(newTotalInput, rand_lit)
@@ -83,13 +96,22 @@ def solve(total_input, list_true):
 # unit clause rule
 def rem_unit_clause(total_input, lit):
   for clause in copy(total_input):
-    if lit in clause: total_input.remove(clause)
-    if -lit in clause: clause.remove(-lit)
+    if lit in clause: 
+      total_input.remove(clause)
+    if -lit in clause: 
+      clause.remove(-lit)
   return total_input
 
 def update_list(lit, list_true):
   list_true.append(lit)
   return (list_true)
+
+def tautology(total_input):
+  for clause in copy(total_input):
+    for lit in clause:
+      if -lit in clause:
+        rem_unit_clause(total_input, lit)
+  return total_input
 
 #### BRANCHING ####
 # randomize function
@@ -97,6 +119,30 @@ def pick_var_random(total_input):
   x = random.choice(total_input)
   rand_var = random.choice(list(x))
   return rand_var
+
+def JW_OS (total_input):
+  counter = {}
+  for clause in total_input:
+      for literal in clause:
+          if literal in counter:
+              counter[literal] = 2 ** -len(clause) + counter[literal]
+          else:
+            counter[literal] = 2 ** -len(clause)
+  if len(counter) > 0:
+    rand_lit = random.choice(list(counter.keys()))
+  return rand_lit
+
+def JW_TS (total_input):
+  counter = {}
+  for clause in total_input:
+      for literal in clause:
+          if literal in counter:
+              counter[abs(literal)] = 2 ** -len(clause) + counter[abs(literal)]
+          else:
+            counter[abs(literal)] = 2 ** -len(clause)
+  if len(counter) > 0:
+    rand_lit = random.choice(list(counter.keys()))
+  return rand_lit
 
 if __name__ == "__main__":
     main()
