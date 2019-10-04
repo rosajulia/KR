@@ -7,15 +7,15 @@ Building a SAT solver and use it to solve Sudoku problems.
 The framework of our code is as follows:
 * Input arguments: clauseset, heuristic
 * Davis–Putnam–Logemann–Loveland (DPLL) algorithm:
-- Simplification function
-- Splitting function
-- Recursive backtracking
+   1. Simplification function
+   2. Splitting function
+   3. Recursive backtracking
 * Several branching heuristics for the splitting function:
-- Random
-- Jeroslaw-Wang one-sided
-- Jeroslaw-Wang two-sided
-- Dynamic Largest Individual Sum
-- Dynamic Largest Combined Sum
+   1. Random
+   2. Jeroslaw-Wang one-sided
+   3. Jeroslaw-Wang two-sided
+   4. Dynamic Largest Individual Sum
+   5. Dynamic Largest Combined Sum
 
 ## Use of program
 **Input**<br />
